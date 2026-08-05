@@ -441,6 +441,15 @@ input {
   flex-direction: column;
   gap: 0.75rem;
   min-width: 0;
+  position: relative;
+}
+
+.player-shell.reactions-collapsed {
+  gap: 0;
+}
+
+.player-shell.reactions-collapsed .emoji-bar {
+  display: none !important;
 }
 
 .video-stage {
@@ -471,10 +480,9 @@ input {
   z-index: 5;
 }
 
-.fs-toggle {
+.fs-toggle,
+.emoji-toggle {
   position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
   z-index: 6;
   width: 2.5rem;
   height: 2.5rem;
@@ -487,20 +495,47 @@ input {
   color: var(--text);
   cursor: pointer;
   backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 
-.fs-toggle:hover {
+.fs-toggle {
+  top: 0.65rem;
+  right: 0.65rem;
+}
+
+.emoji-toggle {
+  top: 0.65rem;
+  right: 3.4rem;
+}
+
+.fs-toggle:hover,
+.emoji-toggle:hover {
   background: var(--bg-hover);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fs-toggle:active {
+.fs-toggle:active,
+.emoji-toggle:active {
   transform: scale(0.95);
 }
 
 .fs-toggle.is-active {
   border-color: rgba(229, 9, 20, 0.45);
+  background: var(--accent-soft);
+}
+
+.emoji-toggle svg {
+  transition: transform 0.2s ease;
+}
+
+.emoji-toggle.is-collapsed svg {
+  transform: rotate(-90deg);
+}
+
+.emoji-toggle.is-collapsed {
+  border-color: rgba(229, 9, 20, 0.35);
   background: var(--accent-soft);
 }
 
@@ -517,35 +552,43 @@ input {
   gap: 0;
   background: #000;
   border-radius: 0;
+  touch-action: manipulation;
 }
 
 .player-shell.is-fs .video-stage,
 .player-shell:fullscreen .video-stage,
 .player-shell:-webkit-full-screen .video-stage {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   max-height: none;
   aspect-ratio: auto;
   border-radius: 0;
   border: none;
   height: auto;
+  overflow: hidden;
 }
 
 .player-shell.is-fs .emoji-bar,
 .player-shell:fullscreen .emoji-bar,
 .player-shell:-webkit-full-screen .emoji-bar {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   justify-content: center;
   padding: 0.65rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
   background: rgba(10, 10, 14, 0.92);
   border-top: 1px solid var(--border);
 }
 
+/* Collapsed in fullscreen: video uses the full height */
+.player-shell.is-fs.reactions-collapsed .video-stage,
+.player-shell:fullscreen.reactions-collapsed .video-stage,
+.player-shell:-webkit-full-screen.reactions-collapsed .video-stage {
+  flex: 1 1 100%;
+}
+
 html.player-fs-lock,
 body.player-fs-lock {
   overflow: hidden;
   height: 100%;
-  touch-action: none;
 }
 
 .floating-emoji {
@@ -574,6 +617,10 @@ body.player-fs-lock {
   padding: 0.35rem 0;
 }
 
+.emoji-bar[hidden] {
+  display: none !important;
+}
+
 .emoji-btn {
   width: 2.75rem;
   height: 2.75rem;
@@ -582,6 +629,8 @@ body.player-fs-lock {
   background: var(--bg-panel);
   font-size: 1.35rem;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: background 0.15s, transform 0.15s, border-color 0.15s;
 }
 

@@ -70,6 +70,8 @@
       reactions = WatchPartyReactions.create({
         barEl: document.getElementById("emoji-bar"),
         layerEl: document.getElementById("reactions-layer"),
+        toggleBtn: document.getElementById("emoji-toggle"),
+        shellEl: document.getElementById("player-shell"),
         sendFn: function (msg) {
           if (wp) wp.send(msg);
         },
