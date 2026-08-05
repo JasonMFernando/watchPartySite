@@ -436,6 +436,13 @@ input {
   gap: 0.75rem;
 }
 
+.player-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
 .video-stage {
   position: relative;
   background: #000;
@@ -447,6 +454,8 @@ input {
 }
 
 .video-stage video {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: block;
@@ -460,6 +469,83 @@ input {
   pointer-events: none;
   overflow: hidden;
   z-index: 5;
+}
+
+.fs-toggle {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 6;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(20, 20, 28, 0.85);
+  color: var(--text);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.fs-toggle:hover {
+  background: var(--bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fs-toggle:active {
+  transform: scale(0.95);
+}
+
+.fs-toggle.is-active {
+  border-color: rgba(229, 9, 20, 0.45);
+  background: var(--accent-soft);
+}
+
+/* CSS fake-fullscreen — keeps reactions + emoji bar visible on phones */
+.player-shell.is-fs,
+.player-shell:fullscreen,
+.player-shell:-webkit-full-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  gap: 0;
+  background: #000;
+  border-radius: 0;
+}
+
+.player-shell.is-fs .video-stage,
+.player-shell:fullscreen .video-stage,
+.player-shell:-webkit-full-screen .video-stage {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: none;
+  height: auto;
+}
+
+.player-shell.is-fs .emoji-bar,
+.player-shell:fullscreen .emoji-bar,
+.player-shell:-webkit-full-screen .emoji-bar {
+  flex-shrink: 0;
+  justify-content: center;
+  padding: 0.65rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(10, 10, 14, 0.92);
+  border-top: 1px solid var(--border);
+}
+
+html.player-fs-lock,
+body.player-fs-lock {
+  overflow: hidden;
+  height: 100%;
+  touch-action: none;
 }
 
 .floating-emoji {

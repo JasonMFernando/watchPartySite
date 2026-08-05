@@ -24,6 +24,7 @@
   let sync = null;
   let chat = null;
   let reactions = null;
+  let fullscreen = null;
 
   function setConnUI(open) {
     connDot.classList.toggle("connected", !!open);
@@ -72,6 +73,13 @@
         sendFn: function (msg) {
           if (wp) wp.send(msg);
         },
+      });
+    }
+    if (!fullscreen) {
+      fullscreen = WatchPartyFullscreen.create({
+        shellEl: document.getElementById("player-shell"),
+        videoEl: video,
+        toggleBtn: document.getElementById("fs-toggle"),
       });
     }
   }
