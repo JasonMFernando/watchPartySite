@@ -3,11 +3,16 @@
  */
 (function (global) {
   const EMOJIS = ["❤️", "😂", "😮", "👏", "🍿"];
+  const STORAGE_KEY = "wp-emoji-bar-collapsed";
 
   function createReactions(options) {
     const barEl = options.barEl;
     const layerEl = options.layerEl;
     const sendFn = options.sendFn;
+    const dockEl = options.dockEl || (barEl && barEl.closest(".emoji-dock"));
+    const collapseBtn =
+      options.collapseBtn ||
+      (dockEl && dockEl.querySelector(".emoji-collapse"));
 
     function spawn(emoji) {
       if (!layerEl) return;
@@ -40,12 +45,48 @@
       barEl.appendChild(btn);
     });
 
+    function setCollapsed(collapsed) {
+      if (!dockEl) return;
+      dockEl.classList.toggle("is-collapsed", collapsed);
+      if (collapseBtn) {
+        collapseBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        collapseBtn.title = collapsed ? "Show reactions" : "Hide reactions";
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
+      } catch (e) {
+        /* ignore */
+      }
+    }
+
+    function isCollapsed() {
+      return !!(dockEl && dockEl.classList.contains("is-collapsed"));
+    }
+
+    if (collapseBtn && dockEl) {
+      collapseBtn.addEventListener("click", function () {
+        setCollapsed(!isCollapsed());
+      });
+      let saved = false;
+      try {
+        saved = localStorage.getItem(STORAGE_KEY) === "1";
+      } catch (e) {
+        /* ignore */
+      }
+      if (saved) setCollapsed(true);
+    }
+
     function onRemote(msg) {
       if (!msg || msg.type !== "reaction" || !msg.emoji) return;
       spawn(msg.emoji);
     }
 
-    return { onRemote: onRemote, spawn: spawn };
+    return {
+      onRemote: onRemote,
+      spawn: spawn,
+      setCollapsed: setCollapsed,
+      isCollapsed: isCollapsed,
+    };
   }
 
   global.WatchPartyReactions = { create: createReactions, EMOJIS: EMOJIS };
