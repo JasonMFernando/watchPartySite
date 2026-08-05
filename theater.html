@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theater — Watch Party</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a href="index.html" class="topbar-brand">Watch <span>Party</span></a>
+        <div class="room-badge">
+          <span class="conn-dot" id="conn-dot" aria-hidden="true"></span>
+          Room <code id="room-code-display">————</code>
+        </div>
+      </header>
+
+      <!-- Guest waiting until host picks a movie -->
+      <div class="waiting-guest" id="waiting-view" hidden>
+        <h1>Waiting for the host</h1>
+        <p>You&apos;re in the room. The theater opens when the host picks a movie.</p>
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="status-msg" id="waiting-status" role="status"></p>
+      </div>
+
+      <div class="theater-layout" id="theater-view" hidden>
+        <div class="player-column">
+          <p class="now-playing">Now playing: <strong id="movie-title">—</strong></p>
+          <div class="video-stage">
+            <div class="reactions-layer" id="reactions-layer" aria-hidden="true"></div>
+            <video id="player" controls playsinline preload="metadata"></video>
+          </div>
+          <div class="emoji-bar" id="emoji-bar" role="toolbar" aria-label="Reactions"></div>
+        </div>
+
+        <aside class="chat-panel" aria-label="Chat">
+          <div class="chat-header">Chat</div>
+          <div class="chat-messages" id="chat-messages">
+            <p class="chat-empty" id="chat-empty">Say hi — messages sync in real time.</p>
+          </div>
+          <form class="chat-form" id="chat-form">
+            <input
+              type="text"
+              id="chat-input"
+              maxlength="500"
+              placeholder="Type a message…"
+              autocomplete="off"
+              aria-label="Message"
+            />
+            <button type="submit" class="btn btn-primary">Send</button>
+          </form>
+        </aside>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="js/peer.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/reactions.js"></script>
+    <script src="js/theater.js"></script>
+  </body>
+</html>

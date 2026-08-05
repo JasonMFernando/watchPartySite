@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watch Party</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="landing">
+    <main class="landing-wrap">
+      <h1 class="brand">Watch <span>Party</span></h1>
+      <p class="tagline">Watch together in sync — share a room, pick a movie, react in real time.</p>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary btn-block" id="create-room-btn">
+          Create Room
+        </button>
+
+        <div class="join-panel">
+          <label for="room-code-input">Join with code</label>
+          <input
+            id="room-code-input"
+            type="text"
+            maxlength="8"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="ABC123"
+            aria-label="Room code"
+          />
+          <button type="button" class="btn btn-ghost btn-block" id="join-room-btn">
+            Join Room
+          </button>
+        </div>
+      </div>
+
+      <p class="status-msg" id="status-msg" role="status" aria-live="polite"></p>
+    </main>
+
+    <script src="js/peer.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

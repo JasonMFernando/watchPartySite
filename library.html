@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Library — Watch Party</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a href="index.html" class="topbar-brand">Watch <span>Party</span></a>
+        <div class="room-badge" title="Share this code with your guest">
+          <span class="conn-dot waiting" id="conn-dot" aria-hidden="true"></span>
+          Room <code id="room-code-display">————</code>
+        </div>
+      </header>
+
+      <main class="library-main" id="library-main">
+        <div class="section-head">
+          <h1>Movie Library</h1>
+          <p>Pick a title to start the watch party. Your guest will join the theater automatically.</p>
+        </div>
+
+        <div class="movie-grid" id="movie-grid"></div>
+
+        <div class="share-hint">
+          <strong>Invite a guest</strong> — share this link or the room code above.
+          <div class="link-row">
+            <input type="text" id="invite-link" readonly aria-label="Invite link" />
+            <button type="button" class="btn btn-ghost" id="copy-link-btn">Copy link</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="js/movies.js"></script>
+    <script src="js/peer.js"></script>
+    <script src="js/library.js"></script>
+  </body>
+</html>
