@@ -82,17 +82,26 @@
       return Promise.resolve();
     }
 
+    function preferFakeFs() {
+      // Touch / coarse pointers: CSS fullscreen is more reliable for overlays.
+      try {
+        if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+          return true;
+        }
+      } catch (e) {
+        /* ignore */
+      }
+      return typeof shellEl.requestFullscreen !== "function";
+    }
+
     function enter() {
       if (isActive()) return;
-      // Prefer real Fullscreen API when the shell can host overlays.
-      // Fall back to CSS fake-fullscreen (needed on many iOS versions).
-      const canShellFs = typeof shellEl.requestFullscreen === "function";
-      if (canShellFs) {
+      if (preferFakeFs()) {
+        enterFake();
+      } else {
         requestDocFs().catch(function () {
           enterFake();
         });
-      } else {
-        enterFake();
       }
       updateBtn();
     }
