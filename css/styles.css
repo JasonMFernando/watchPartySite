@@ -214,6 +214,21 @@ input {
     var(--bg-deep);
 }
 
+/* Theater: lock to viewport so chat scrolls instead of growing the page */
+body.theater-page {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.theater-page .page {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -426,12 +441,15 @@ input {
   display: grid;
   grid-template-columns: 1fr minmax(260px, 320px);
   min-height: 0;
+  overflow: hidden;
 }
 
 .player-column {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
   padding: 1rem 1rem 1.25rem;
   gap: 0.75rem;
 }
@@ -651,9 +669,12 @@ body.player-fs-lock {
   border-left: 1px solid var(--border);
   background: var(--bg-elevated);
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .chat-header {
+  flex-shrink: 0;
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border);
   font-weight: 600;
@@ -664,13 +685,15 @@ body.player-fs-lock {
 }
 
 .chat-messages {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  min-height: 200px;
 }
 
 .chat-bubble {
@@ -709,6 +732,8 @@ body.player-fs-lock {
   gap: 0.5rem;
   padding: 0.75rem;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-elevated);
 }
 
 .chat-form input {
@@ -796,12 +821,14 @@ body.player-fs-lock {
 @media (max-width: 860px) {
   .theater-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(280px, 40vh);
+    grid-template-rows: minmax(0, 1fr) minmax(220px, 38vh);
   }
 
   .chat-panel {
     border-left: none;
     border-top: 1px solid var(--border);
+    height: auto;
+    min-height: 0;
   }
 
   .video-stage {
