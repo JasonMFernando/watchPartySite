@@ -2,7 +2,7 @@
  * Emoji reaction bar + floating animations over the video.
  */
 (function (global) {
-  const EMOJIS = ["❤️", "😂", "😮", "👏", "🍿"];
+  const EMOJIS = ["❤️", "😂", "😮", "👏", "🍿", "😖", "😭", "⏳"];
   const STORAGE_KEY = "wp-emoji-bar-collapsed";
 
   function createReactions(options) {
