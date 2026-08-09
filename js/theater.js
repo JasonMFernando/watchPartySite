@@ -54,6 +54,18 @@
         if (wp) wp.send(msg);
       });
     }
+    if (!reactions) {
+      reactions = WatchPartyReactions.create({
+        barEl: document.getElementById("emoji-bar"),
+        layerEl: document.getElementById("reactions-layer"),
+        toggleBtn: document.getElementById("emoji-toggle"),
+        dndBtn: document.getElementById("dnd-toggle"),
+        shellEl: document.getElementById("player-shell"),
+        sendFn: function (msg) {
+          if (wp) wp.send(msg);
+        },
+      });
+    }
     if (!chat) {
       chat = WatchPartyChat.create({
         messagesEl: document.getElementById("chat-messages"),
@@ -64,16 +76,8 @@
         sendFn: function (msg) {
           if (wp) wp.send(msg);
         },
-      });
-    }
-    if (!reactions) {
-      reactions = WatchPartyReactions.create({
-        barEl: document.getElementById("emoji-bar"),
-        layerEl: document.getElementById("reactions-layer"),
-        toggleBtn: document.getElementById("emoji-toggle"),
-        shellEl: document.getElementById("player-shell"),
-        sendFn: function (msg) {
-          if (wp) wp.send(msg);
+        overlayFn: function (text, from) {
+          if (reactions) reactions.spawnChat(text, from);
         },
       });
     }

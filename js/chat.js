@@ -9,6 +9,7 @@
     const inputEl = options.inputEl;
     const role = options.role || "you";
     const sendFn = options.sendFn;
+    const overlayFn = options.overlayFn;
 
     function hideEmpty() {
       if (emptyEl) emptyEl.hidden = true;
@@ -25,6 +26,9 @@
       bubble.appendChild(document.createTextNode(text));
       messagesEl.appendChild(bubble);
       messagesEl.scrollTop = messagesEl.scrollHeight;
+      if (typeof overlayFn === "function") {
+        overlayFn(text, from);
+      }
     }
 
     formEl.addEventListener("submit", function (e) {
