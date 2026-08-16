@@ -50,5 +50,11 @@ const MOVIES = [
     title: "When Life Gives You Tangerines - S01E08",
     poster: "",
     url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e08.The.Moon.Wanes.Yet.The.Young.Heart.Remains.720P.Web-Dl.X265.10Bit-Pahe.In.mp4",
+  },
+  {
+    id: "Minions and Monsters",
+    title: "Minions & Monsters",
+    poster: "",
+    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/Minions.And.Monsters.2026.1080P.Web-Dl.X265.6Ch-Pahe.In.mp4",
   }
 ];
