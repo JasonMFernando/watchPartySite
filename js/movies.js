@@ -58,15 +58,15 @@ const MOVIES = [
     url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e09.The.Wind.Goes.Whoosh.My.Heart.Goes.Boo-Hoo.720P.Web-Dl.X265.10Bit-Pahe.In.mp4",
   },
   {
+    id: "tangerines-ep10",
+    title: "When Life Gives You Tangerines - S01E10",
+    poster: "",
+    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e10.The.Storm.Sweeps.My.Heart.The.Love.Rocks.My.Heart.720P.Web-Dl.X265.10Bit-Pahe.In.mp4",
+  },
+  {
     id: "Minions and Monsters",
     title: "Minions & Monsters",
     poster: "",
     url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/Minions.And.Monsters.2026.1080P.Web-Dl.X265.6Ch-Pahe.In.mp4",
-  },
-  {
-    id: "Soulm8te",
-    title: "Soulm8te",
-    poster: "",
-    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/Soulm8te.2026.1080P.Web-Dl.X265.6Ch-Pahe.In.mp4",
   }
 ];
