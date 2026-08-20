@@ -68,5 +68,11 @@ const MOVIES = [
     title: "Minions & Monsters",
     poster: "",
     url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/Minions.And.Monsters.2026.1080P.Web-Dl.X265.6Ch-Pahe.In.mp4",
+  },
+  {
+    id: "Fantastic four",
+    title: "Fantastic four",
+    poster: "",
+    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/The.Fantastic.Four.First.Steps.2025.720P.Bluray.X265.10Bit-Pahe.In.mp4",
   }
 ];
