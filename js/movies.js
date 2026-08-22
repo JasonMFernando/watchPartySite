@@ -68,5 +68,11 @@ const MOVIES = [
     title: "When Life Gives You Tangerines - S01E11",
     poster: "",
     url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e11.My.Love.By.My.Side.720P.Web-Dl.X265.10Bit-Pahe.In.mp4",
+  },
+  {
+    id: "tangerines-ep12",
+    title: "When Life Gives You Tangerines - S01E12",
+    poster: "",
+    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e12.A.Glistening.Winter.720P.Web-Dl.X265.10Bit-Pahe.In.mp4",
   }
 ];
