@@ -74,5 +74,17 @@ const MOVIES = [
     title: "When Life Gives You Tangerines - S01E12",
     poster: "",
     url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e12.A.Glistening.Winter.720P.Web-Dl.X265.10Bit-Pahe.In.mp4",
+  },
+  {
+    id: "tangerines-ep13",
+    title: "When Life Gives You Tangerines - S01E13",
+    poster: "",
+    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e13.Such.An.Uneven.Love.720P.Nf.Web-Dl.X265.10Bit-Pahe.In.mp4",
+  },
+  {
+    id: "tangerines-ep14",
+    title: "When Life Gives You Tangerines - S01E14",
+    poster: "",
+    url: "https://pub-5792d63d13be4d1aa9335b7d76fc9295.r2.dev/When.Life.Gives.You.Tangerines.S01e14.Spread.Your.Wings.And.Fly.720P.Nf.Web-Dl.X265.10Bit-Pahe.In.mp4",
   }
 ];
