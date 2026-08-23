@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movie Library — Watch Party</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/styles.css?v=14" />
   </head>
   <body>
     <div class="page">
@@ -23,6 +23,7 @@
         </div>
 
         <div class="movie-grid" id="movie-grid"></div>
+        <p class="library-status" id="library-status" role="status">Loading movies…</p>
 
         <div class="share-hint">
           <strong>Invite a guest</strong> — share this link or the room code above.
@@ -35,8 +36,7 @@
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <script src="js/movies.js"></script>
-    <script src="js/peer.js"></script>
-    <script src="js/library.js"></script>
+    <script src="js/peer.js?v=14"></script>
+    <script src="js/library.js?v=14"></script>
   </body>
 </html>

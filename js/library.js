@@ -1,4 +1,7 @@
 (function () {
+  const MOVIE_LIST_URL =
+    "https://watchparty-movie-list.jasonmathewfd.workers.dev/";
+
   const roomCode =
     WatchPartyPeer.getQueryParam("room") ||
     (WatchPartyPeer.loadSession() && WatchPartyPeer.loadSession().roomCode);
@@ -7,6 +10,7 @@
   const roomDisplay = document.getElementById("room-code-display");
   const connDot = document.getElementById("conn-dot");
   const movieGrid = document.getElementById("movie-grid");
+  const libraryStatus = document.getElementById("library-status");
   const inviteLink = document.getElementById("invite-link");
   const copyBtn = document.getElementById("copy-link-btn");
 
@@ -48,6 +52,14 @@
     connDot.classList.toggle("waiting", !open);
   }
 
+  function setLibraryStatus(text, kind) {
+    if (!libraryStatus) return;
+    libraryStatus.textContent = text || "";
+    libraryStatus.hidden = !text;
+    libraryStatus.className =
+      "library-status" + (kind ? " " + kind : "");
+  }
+
   const wp = WatchPartyPeer.create();
   let pendingMovie = null;
 
@@ -78,7 +90,6 @@
       roomCode: roomCode,
       movie: movie,
     });
-    // Peer cannot survive navigation — theater will resume host peer
     wp.destroy();
     window.location.href =
       "theater.html?room=" + encodeURIComponent(roomCode) + "&role=host";
@@ -99,50 +110,86 @@
 
     if (wp.connected) {
       wp.send({ type: "movie", ...payload, at: Date.now() });
-      // Brief delay so guest receives before host tears down peer
       setTimeout(function () {
         goToTheater(payload);
       }, 400);
     } else {
-      // Guest not connected yet — host can still enter theater; guest gets movie on reconnect via session... 
-      // Guest won't have movie until host rebroadcasts on theater. Proceed anyway.
       goToTheater(payload);
     }
   }
 
-  (typeof MOVIES !== "undefined" ? MOVIES : []).forEach(function (movie) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "movie-card";
-    btn.setAttribute("aria-label", "Select " + movie.title);
-
-    const poster = document.createElement("div");
-    poster.className = "movie-poster";
-
-    if (movie.poster) {
-      const img = document.createElement("img");
-      img.src = movie.poster;
-      img.alt = "";
-      img.loading = "lazy";
-      poster.appendChild(img);
-    } else {
-      const fallback = document.createElement("span");
-      fallback.className = "movie-poster-fallback";
-      fallback.textContent = (movie.title || "?").charAt(0).toUpperCase();
-      poster.appendChild(fallback);
+  function renderMovies(movies) {
+    movieGrid.innerHTML = "";
+    if (!movies.length) {
+      setLibraryStatus("No movies found in the bucket yet.", "error");
+      return;
     }
+    setLibraryStatus("", "");
 
-    const title = document.createElement("div");
-    title.className = "movie-title";
-    title.textContent = movie.title;
+    movies.forEach(function (movie) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "movie-card";
+      btn.setAttribute("aria-label", "Select " + movie.title);
 
-    btn.appendChild(poster);
-    btn.appendChild(title);
-    btn.addEventListener("click", function () {
-      selectMovie(movie);
+      const poster = document.createElement("div");
+      poster.className = "movie-poster";
+
+      if (movie.poster) {
+        const img = document.createElement("img");
+        img.src = movie.poster;
+        img.alt = "";
+        img.loading = "lazy";
+        poster.appendChild(img);
+      } else {
+        const fallback = document.createElement("span");
+        fallback.className = "movie-poster-fallback";
+        fallback.textContent = (movie.title || "?").charAt(0).toUpperCase();
+        poster.appendChild(fallback);
+      }
+
+      const title = document.createElement("div");
+      title.className = "movie-title";
+      title.textContent = movie.title;
+
+      btn.appendChild(poster);
+      btn.appendChild(title);
+      btn.addEventListener("click", function () {
+        selectMovie(movie);
+      });
+      movieGrid.appendChild(btn);
     });
-    movieGrid.appendChild(btn);
-  });
+  }
+
+  function loadMovies() {
+    setLibraryStatus("Loading movies…", "");
+    movieGrid.innerHTML = "";
+
+    fetch(MOVIE_LIST_URL)
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("Could not load movie list (" + res.status + ")");
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (!Array.isArray(data)) {
+          throw new Error(
+            (data && data.error) || "Movie list returned invalid data"
+          );
+        }
+        renderMovies(data);
+      })
+      .catch(function (err) {
+        setLibraryStatus(
+          (err && err.message) ||
+            "Could not load movies. Check your connection and try again.",
+          "error"
+        );
+      });
+  }
+
+  loadMovies();
 
   window.addEventListener("beforeunload", function () {
     // leave peer alive only if staying; destroy on leave
