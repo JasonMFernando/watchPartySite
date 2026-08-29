@@ -4,22 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Theater — Watch Party</title>
-    <link rel="stylesheet" href="css/styles.css?v=9" />
+    <link rel="stylesheet" href="css/styles.css?v=16" />
   </head>
   <body class="theater-page">
     <div class="page">
       <header class="topbar">
         <a href="index.html" class="topbar-brand">Watch <span>Party</span></a>
-        <div class="room-badge">
-          <span class="conn-dot" id="conn-dot" aria-hidden="true"></span>
-          Room <code id="room-code-display">————</code>
+        <div class="topbar-actions">
+          <button
+            type="button"
+            class="btn btn-ghost topbar-btn"
+            id="change-movie-btn"
+            hidden
+          >
+            Change movie
+          </button>
+          <div class="room-badge">
+            <span class="conn-dot" id="conn-dot" aria-hidden="true"></span>
+            Room <code id="room-code-display">————</code>
+          </div>
         </div>
       </header>
 
       <!-- Guest waiting until host picks a movie -->
       <div class="waiting-guest" id="waiting-view" hidden>
         <h1>Waiting for the host</h1>
-        <p>You&apos;re in the room. The theater opens when the host picks a movie.</p>
+        <p id="waiting-copy">You&apos;re in the room. The theater opens when the host picks a movie.</p>
         <div class="spinner" aria-hidden="true"></div>
         <p class="status-msg" id="waiting-status" role="status"></p>
       </div>
@@ -97,11 +107,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js?v=15"></script>
-    <script src="js/peer.js?v=15"></script>
+    <script src="js/peer.js?v=16"></script>
     <script src="js/sync.js?v=15"></script>
     <script src="js/chat.js?v=15"></script>
     <script src="js/reactions.js?v=15"></script>
     <script src="js/fullscreen.js?v=5"></script>
-    <script src="js/theater.js?v=15"></script>
+    <script src="js/theater.js?v=16"></script>
   </body>
 </html>

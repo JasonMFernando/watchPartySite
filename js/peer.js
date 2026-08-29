@@ -101,7 +101,10 @@
       const movieRef = roomRef.child("movie");
       const movieHandler = movieRef.on("value", function (snap) {
         const movie = snap.val();
-        if (!movie || !movie.url) return;
+        if (!movie || !movie.url) {
+          emit("movie-clear", { type: "movie-clear", at: Date.now() });
+          return;
+        }
         emit("movie", {
           type: "movie",
           id: movie.id,
@@ -264,6 +267,12 @@
             at: at,
             by: api.clientId,
           });
+          return true;
+        }
+
+        if (msg.type === "movie-clear") {
+          api._roomRef.child("movie").remove();
+          api._roomRef.child("playback").remove();
           return true;
         }
 

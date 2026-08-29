@@ -9,8 +9,10 @@
   const waitingView = document.getElementById("waiting-view");
   const theaterView = document.getElementById("theater-view");
   const waitingStatus = document.getElementById("waiting-status");
+  const waitingCopy = document.getElementById("waiting-copy");
   const movieTitleEl = document.getElementById("movie-title");
   const video = document.getElementById("player");
+  const changeMovieBtn = document.getElementById("change-movie-btn");
 
   if (!roomCode) {
     window.location.href = "index.html";
@@ -26,6 +28,10 @@
   let reactions = null;
   let fullscreen = null;
   let destroyed = false;
+
+  if (changeMovieBtn && role === "host") {
+    changeMovieBtn.hidden = false;
+  }
 
   function setConnUI(open) {
     connDot.classList.toggle("connected", !!open);
@@ -91,11 +97,48 @@
     }
   }
 
-  function showWaiting() {
+  function showWaiting(nextMovie) {
+    currentMovie = null;
     waitingView.hidden = false;
     theaterView.hidden = true;
-    waitingStatus.textContent = "Connecting to room…";
-    waitingStatus.className = "status-msg";
+    try {
+      video.pause();
+    } catch (_) {}
+    video.removeAttribute("data-movie-url");
+    video.removeAttribute("src");
+    video.load();
+
+    if (waitingCopy) {
+      waitingCopy.textContent = nextMovie
+        ? "Host is picking the next movie. Hang tight — same room."
+        : "You're in the room. The theater opens when the host picks a movie.";
+    }
+    waitingStatus.textContent = nextMovie
+      ? "Waiting for the next movie…"
+      : "In the room — waiting for the host to pick a movie…";
+    waitingStatus.className = "status-msg ok";
+  }
+
+  function goToLibraryForNextMovie() {
+    try {
+      video.pause();
+    } catch (_) {}
+    wp.send({ type: "movie-clear", at: Date.now() });
+    WatchPartyPeer.saveSession({
+      role: "host",
+      roomCode: roomCode,
+      movie: null,
+    });
+    wp.destroy();
+    window.location.href =
+      "library.html?room=" + encodeURIComponent(roomCode) + "&role=host";
+  }
+
+  if (changeMovieBtn) {
+    changeMovieBtn.addEventListener("click", function () {
+      if (role !== "host") return;
+      goToLibraryForNextMovie();
+    });
   }
 
   const wp = WatchPartyPeer.create();
@@ -138,6 +181,17 @@
     });
   });
 
+  wp.on("movie-clear", function () {
+    if (role === "guest") {
+      WatchPartyPeer.saveSession({
+        role: "guest",
+        roomCode: roomCode,
+        movie: null,
+      });
+      showWaiting(true);
+    }
+  });
+
   wp.on("play", function (msg) {
     if (sync) sync.applyRemote(msg);
   });
@@ -170,7 +224,7 @@
       "library.html?room=" + encodeURIComponent(roomCode) + "&role=host";
     return;
   } else {
-    showWaiting();
+    showWaiting(false);
   }
 
   const start =
