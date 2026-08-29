@@ -159,27 +159,42 @@
         reactionRef.off("child_added", reactionHandler);
       });
 
-      // Other party presence → green/yellow dot feels right
+      // Other party presence → green/yellow dot + room count
       const presenceRef = roomRef.child("presence");
       const presenceHandler = presenceRef.on("value", function (snap) {
         const all = snap.val() || {};
-        const otherRole = api.role === "host" ? "guest" : "host";
-        let otherOnline = false;
+        let hostOnline = false;
+        let guestOnline = false;
+        let count = 0;
         Object.keys(all).forEach(function (key) {
           const p = all[key];
-          if (p && p.role === otherRole) otherOnline = true;
+          if (!p || !p.role) return;
+          count += 1;
+          if (p.role === "host") hostOnline = true;
+          if (p.role === "guest") guestOnline = true;
         });
-        // Stay "connected" to the room as long as Firebase join succeeded;
-        // prefer showing linked when the other person is also here.
-        if (api.role === "host") {
-          setConnected(true);
-        } else {
-          setConnected(true);
-        }
-        emit("presence", { otherOnline: otherOnline, all: all });
+        const otherOnline =
+          api.role === "host" ? guestOnline : hostOnline;
+        setConnected(true);
+        emit("presence", {
+          otherOnline: otherOnline,
+          hostOnline: hostOnline,
+          guestOnline: guestOnline,
+          count: count,
+          all: all,
+        });
       });
       api._unsubs.push(function () {
         presenceRef.off("value", presenceHandler);
+      });
+
+      // Host picking next movie (library) — guest should not treat brief offline as "left"
+      const pickingRef = roomRef.child("pickingMovie");
+      const pickingHandler = pickingRef.on("value", function (snap) {
+        emit("picking", { active: !!snap.val() });
+      });
+      api._unsubs.push(function () {
+        pickingRef.off("value", pickingHandler);
       });
     }
 
@@ -241,6 +256,12 @@
             });
           })
           .then(function () {
+            // Host back on library/theater — no longer mid-navigation
+            if (role === "host") {
+              return api._roomRef.child("pickingMovie").set(false);
+            }
+          })
+          .then(function () {
             saveSession({ role: role, roomCode: roomCode });
             setConnected(true);
             resolve(roomCode);
@@ -273,6 +294,11 @@
         if (msg.type === "movie-clear") {
           api._roomRef.child("movie").remove();
           api._roomRef.child("playback").remove();
+          return true;
+        }
+
+        if (msg.type === "picking") {
+          api._roomRef.child("pickingMovie").set(!!msg.active);
           return true;
         }
 

@@ -8,6 +8,7 @@
   const role = WatchPartyPeer.getQueryParam("role") || "host";
 
   const roomDisplay = document.getElementById("room-code-display");
+  const roomCountEl = document.getElementById("room-count");
   const connDot = document.getElementById("conn-dot");
   const movieGrid = document.getElementById("movie-grid");
   const libraryStatus = document.getElementById("library-status");
@@ -52,6 +53,12 @@
     connDot.classList.toggle("waiting", !open);
   }
 
+  function setRoomCount(count) {
+    if (!roomCountEl) return;
+    const n = typeof count === "number" ? count : 1;
+    roomCountEl.textContent = n === 1 ? "1 online" : n + " online";
+  }
+
   function setLibraryStatus(text, kind) {
     if (!libraryStatus) return;
     libraryStatus.textContent = text || "";
@@ -66,9 +73,16 @@
     setConnUI(state.open);
   });
 
+  wp.on("presence", function (state) {
+    setRoomCount(state.count);
+    setConnUI(!!state.guestOnline);
+  });
+
   wp.on("error", function (err) {
     alert(err.message || "Connection error");
   });
+
+  setRoomCount(1);
 
   wp
     .startHost(roomCode)

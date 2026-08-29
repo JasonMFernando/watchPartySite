@@ -27,6 +27,9 @@
           "$clientId": {
             ".validate": "newData.hasChildren(['role', 'at']) && (newData.child('role').val() == 'host' || newData.child('role').val() == 'guest')"
           }
+        },
+        "pickingMovie": {
+          ".validate": "newData.isBoolean()"
         }
       }
     }

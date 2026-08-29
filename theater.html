@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Theater — Watch Party</title>
-    <link rel="stylesheet" href="css/styles.css?v=16" />
+    <link rel="stylesheet" href="css/styles.css?v=17" />
   </head>
   <body class="theater-page">
     <div class="page">
@@ -22,6 +22,7 @@
           <div class="room-badge">
             <span class="conn-dot" id="conn-dot" aria-hidden="true"></span>
             Room <code id="room-code-display">————</code>
+            <span class="room-count" id="room-count" aria-live="polite">1 online</span>
           </div>
         </div>
       </header>
@@ -37,6 +38,7 @@
       <div class="theater-layout" id="theater-view" hidden>
         <div class="player-column">
           <p class="now-playing">Now playing: <strong id="movie-title">—</strong></p>
+          <p class="party-status" id="party-status" role="status" hidden></p>
           <div class="player-shell" id="player-shell">
             <div class="video-stage">
               <div class="reactions-layer" id="reactions-layer" aria-hidden="true"></div>
@@ -107,11 +109,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js?v=15"></script>
-    <script src="js/peer.js?v=16"></script>
+    <script src="js/peer.js?v=17"></script>
     <script src="js/sync.js?v=15"></script>
     <script src="js/chat.js?v=15"></script>
     <script src="js/reactions.js?v=15"></script>
     <script src="js/fullscreen.js?v=5"></script>
-    <script src="js/theater.js?v=16"></script>
+    <script src="js/theater.js?v=17"></script>
   </body>
 </html>

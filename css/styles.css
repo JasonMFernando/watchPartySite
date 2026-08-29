@@ -288,6 +288,29 @@ body.theater-page .page {
   text-transform: uppercase;
 }
 
+.room-count {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding-left: 0.35rem;
+  border-left: 1px solid var(--border);
+  margin-left: 0.1rem;
+  white-space: nowrap;
+}
+
+.party-status {
+  margin: -0.35rem 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.party-status.warn {
+  color: #e8a317;
+}
+
+.party-status.error {
+  color: var(--danger, #e85d5d);
+}
+
 .conn-dot {
   width: 8px;
   height: 8px;

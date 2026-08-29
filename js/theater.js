@@ -5,12 +5,14 @@
   const role = params.get("role") || session.role || "guest";
 
   const roomDisplay = document.getElementById("room-code-display");
+  const roomCountEl = document.getElementById("room-count");
   const connDot = document.getElementById("conn-dot");
   const waitingView = document.getElementById("waiting-view");
   const theaterView = document.getElementById("theater-view");
   const waitingStatus = document.getElementById("waiting-status");
   const waitingCopy = document.getElementById("waiting-copy");
   const movieTitleEl = document.getElementById("movie-title");
+  const partyStatus = document.getElementById("party-status");
   const video = document.getElementById("player");
   const changeMovieBtn = document.getElementById("change-movie-btn");
 
@@ -28,6 +30,10 @@
   let reactions = null;
   let fullscreen = null;
   let destroyed = false;
+  let hostPicking = false;
+  let hostLeftHandled = false;
+  let leaveTimer = null;
+  let guestWasOnline = false;
 
   if (changeMovieBtn && role === "host") {
     changeMovieBtn.hidden = false;
@@ -36,6 +42,25 @@
   function setConnUI(open) {
     connDot.classList.toggle("connected", !!open);
     connDot.classList.toggle("waiting", !open);
+  }
+
+  function setRoomCount(count) {
+    if (!roomCountEl) return;
+    const n = typeof count === "number" ? count : 1;
+    roomCountEl.textContent = n === 1 ? "1 online" : n + " online";
+  }
+
+  function setPartyStatus(text, kind) {
+    if (!partyStatus) return;
+    if (!text) {
+      partyStatus.hidden = true;
+      partyStatus.textContent = "";
+      partyStatus.className = "party-status";
+      return;
+    }
+    partyStatus.hidden = false;
+    partyStatus.textContent = text;
+    partyStatus.className = "party-status" + (kind ? " " + kind : "");
   }
 
   function showTheater(movie) {
@@ -101,6 +126,7 @@
     currentMovie = null;
     waitingView.hidden = false;
     theaterView.hidden = true;
+    setPartyStatus("");
     try {
       video.pause();
     } catch (_) {}
@@ -119,19 +145,55 @@
     waitingStatus.className = "status-msg ok";
   }
 
+  function handleHostLeft() {
+    if (hostLeftHandled || destroyed || role !== "guest") return;
+    if (hostPicking) return;
+    hostLeftHandled = true;
+    try {
+      video.pause();
+    } catch (_) {}
+    setConnUI(false);
+    setPartyStatus("Host left the room", "error");
+    if (!waitingView.hidden) {
+      if (waitingCopy) {
+        waitingCopy.textContent = "The host left this watch party.";
+      }
+      waitingStatus.textContent = "Host left — taking you home…";
+      waitingStatus.className = "status-msg error";
+    } else {
+      waitingView.hidden = false;
+      theaterView.hidden = true;
+      if (waitingCopy) {
+        waitingCopy.textContent = "The host left this watch party.";
+      }
+      waitingStatus.textContent = "Host left — taking you home…";
+      waitingStatus.className = "status-msg error";
+    }
+    WatchPartyPeer.clearSession();
+    setTimeout(function () {
+      if (destroyed) return;
+      wp.destroy();
+      window.location.href = "index.html";
+    }, 2500);
+  }
+
   function goToLibraryForNextMovie() {
     try {
       video.pause();
     } catch (_) {}
+    wp.send({ type: "picking", active: true, at: Date.now() });
     wp.send({ type: "movie-clear", at: Date.now() });
     WatchPartyPeer.saveSession({
       role: "host",
       roomCode: roomCode,
       movie: null,
     });
-    wp.destroy();
-    window.location.href =
-      "library.html?room=" + encodeURIComponent(roomCode) + "&role=host";
+    // Short delay so picking + clear land before presence drops
+    setTimeout(function () {
+      wp.destroy();
+      window.location.href =
+        "library.html?room=" + encodeURIComponent(roomCode) + "&role=host";
+    }, 200);
   }
 
   if (changeMovieBtn) {
@@ -172,8 +234,57 @@
     }
   });
 
+  wp.on("picking", function (msg) {
+    hostPicking = !!msg.active;
+  });
+
+  wp.on("presence", function (state) {
+    if (destroyed || hostLeftHandled) return;
+
+    setRoomCount(state.count);
+
+    if (role === "host") {
+      setConnUI(!!state.guestOnline);
+      if (state.guestOnline) {
+        guestWasOnline = true;
+        setPartyStatus("");
+      } else if (guestWasOnline) {
+        setPartyStatus("Guest left the room", "warn");
+      } else {
+        setPartyStatus("Waiting for guest…", "");
+      }
+      return;
+    }
+
+    // Guest
+    setConnUI(!!state.hostOnline);
+
+    if (leaveTimer) {
+      clearTimeout(leaveTimer);
+      leaveTimer = null;
+    }
+
+    if (state.hostOnline) {
+      if (!waitingView.hidden && !currentMovie && !hostPicking) {
+        waitingStatus.textContent =
+          "In the room — waiting for the host to pick a movie…";
+        waitingStatus.className = "status-msg ok";
+      }
+      return;
+    }
+
+    // Host offline — debounce so Change movie navigation doesn't false-fire
+    leaveTimer = setTimeout(function () {
+      leaveTimer = null;
+      if (destroyed || hostLeftHandled || hostPicking) return;
+      handleHostLeft();
+    }, 3500);
+  });
+
   wp.on("movie", function (msg) {
     if (!msg.url) return;
+    hostPicking = false;
+    setPartyStatus("");
     showTheater({
       id: msg.id,
       title: msg.title,
@@ -227,6 +338,8 @@
     showWaiting(false);
   }
 
+  setRoomCount(1);
+
   const start =
     role === "host" ? wp.resumeHost(roomCode) : wp.resumeGuest(roomCode);
 
@@ -255,6 +368,7 @@
 
   window.addEventListener("beforeunload", function () {
     destroyed = true;
+    if (leaveTimer) clearTimeout(leaveTimer);
     wp.destroy();
   });
 })();
