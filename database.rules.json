@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$roomCode": {
+        ".read": true,
+        ".write": true,
+        ".validate": "$roomCode.length >= 4 && $roomCode.length <= 12",
+        "movie": {
+          ".validate": "newData.hasChildren(['url', 'at']) && newData.child('url').isString() && newData.child('url').val().length <= 2000"
+        },
+        "playback": {
+          ".validate": "newData.hasChildren(['type', 'currentTime', 'at']) && (newData.child('type').val() == 'play' || newData.child('type').val() == 'pause' || newData.child('type').val() == 'seek')"
+        },
+        "chat": {
+          "$msgId": {
+            ".validate": "newData.hasChildren(['text', 'from', 'at']) && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 500"
+          }
+        },
+        "reactions": {
+          "$msgId": {
+            ".validate": "newData.hasChildren(['emoji', 'at']) && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8"
+          }
+        },
+        "presence": {
+          "$clientId": {
+            ".validate": "newData.hasChildren(['role', 'at']) && (newData.child('role').val() == 'host' || newData.child('role').val() == 'guest')"
+          }
+        }
+      }
+    }
+  }
+}

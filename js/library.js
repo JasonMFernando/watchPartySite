@@ -61,13 +61,9 @@
   }
 
   const wp = WatchPartyPeer.create();
-  let pendingMovie = null;
 
   wp.on("connection", function (state) {
     setConnUI(state.open);
-    if (state.open && pendingMovie) {
-      wp.send({ type: "movie", ...pendingMovie, at: Date.now() });
-    }
   });
 
   wp.on("error", function (err) {
@@ -78,9 +74,10 @@
     .startHost(roomCode)
     .then(function () {
       WatchPartyPeer.saveSession({ role: "host", roomCode: roomCode });
+      setConnUI(true);
     })
     .catch(function (err) {
-      alert(err.message || "Could not create room peer.");
+      alert(err.message || "Could not create room.");
       window.location.href = "index.html";
     });
 
@@ -90,6 +87,7 @@
       roomCode: roomCode,
       movie: movie,
     });
+    // Firebase room stays in RTDB — just leave this page
     wp.destroy();
     window.location.href =
       "theater.html?room=" + encodeURIComponent(roomCode) + "&role=host";
@@ -101,21 +99,21 @@
       title: movie.title,
       url: movie.url,
     };
-    pendingMovie = payload;
     WatchPartyPeer.saveSession({
       role: "host",
       roomCode: roomCode,
       movie: payload,
     });
 
-    if (wp.connected) {
-      wp.send({ type: "movie", ...payload, at: Date.now() });
-      setTimeout(function () {
-        goToTheater(payload);
-      }, 400);
-    } else {
+    movieGrid.querySelectorAll(".movie-card").forEach(function (btn) {
+      btn.disabled = true;
+    });
+
+    // Publish movie to Firebase so guests see it even during navigation
+    wp.send({ type: "movie", ...payload, at: Date.now() });
+    setTimeout(function () {
       goToTheater(payload);
-    }
+    }, 250);
   }
 
   function renderMovies(movies) {
@@ -190,8 +188,4 @@
   }
 
   loadMovies();
-
-  window.addEventListener("beforeunload", function () {
-    // leave peer alive only if staying; destroy on leave
-  });
 })();

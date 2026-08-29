@@ -1,81 +1,64 @@
 # Watch Party
 
-Real-time watch-together app for **GitHub Pages** — vanilla HTML, CSS, and JavaScript with **PeerJS** (WebRTC) for host ↔ guest sync. No build step, no backend server.
+Real-time watch-together app for **GitHub Pages** — vanilla HTML/CSS/JS with **Firebase Realtime Database** for room sync. Videos stream from Cloudflare R2. No build step.
 
 ## Features
 
 - Create / join rooms with a short room code and shareable link
-- Host movie library (titles + direct `.mp4` URLs)
-- Synchronized play, pause, and seek (seek sync when drift &gt; 2s)
-- Sidebar text chat
-- Floating emoji reactions
+- Host movie library loaded from an R2-backed Cloudflare Worker
+- Synchronized play, pause, and seek
+- Sidebar text chat + floating emoji reactions
 
 ## Quick start (local)
 
-Because PeerJS and some browsers restrict `file://`, serve the folder over HTTP:
-
 ```bash
-# Python 3
 python -m http.server 8080
-
-# or Node
-npx --yes serve .
 ```
 
 Open `http://localhost:8080`, click **Create Room**, open the invite link in another browser/profile, then pick a movie as host.
 
-## Add your Cloudflare R2 videos
+## Firebase setup (required)
 
-Edit [`js/movies.js`](js/movies.js) and replace the placeholder entries:
+1. Project config lives in [`js/firebase-config.js`](js/firebase-config.js).
+2. In Firebase Console → **Realtime Database → Rules**, paste the contents of [`database.rules.json`](database.rules.json) and **Publish**.
+3. Until rules are published (or if left locked), create/join will fail.
 
-```js
-const MOVIES = [
-  {
-    id: "demo-1",
-    title: "My Movie",
-    poster: "", // optional image URL
-    url: "https://YOUR-R2-BUCKET.r2.dev/path/to/video.mp4",
-  },
-];
-```
+Default rules allow anyone with a room code to read/write that room (fine for a private watch party; tighten later if you add Auth).
 
-Subtitles should be burned into the video files (no separate subtitle tracks).
+## Movies (R2 + Worker)
+
+The library fetches:
+
+`https://watchparty-movie-list.jasonmathewfd.workers.dev/`
+
+Upload `.mp4` files to your R2 bucket; refresh the library to see them. No need to edit `js/movies.js` for new episodes.
 
 ### R2 CORS
 
-The browser must be allowed to `GET` the `.mp4` from your Pages origin. In the R2 bucket CORS policy, allow your GitHub Pages origin (and `http://localhost:8080` for local testing), methods `GET` / `HEAD`, and appropriate headers.
+Allow your GitHub Pages origin (and `http://localhost:8080`) for `GET` / `HEAD`.
 
 ## Deploy to GitHub Pages
 
 1. Push this repo to GitHub.
-2. **Settings → Pages → Build and deployment**
-3. Source: **Deploy from a branch**
-4. Branch: `main` (or `master`), folder: **/ (root)**
-5. Save, then open `https://<user>.github.io/<repo>/`
+2. **Settings → Pages → Deploy from a branch** → `main` / **(root)**
 
 ## How sync works
 
-1. **Host** opens a PeerJS peer whose ID is the room code (library, then theater).
-2. **Guest** connects to that ID with a DataConnection.
-3. JSON messages (`play`, `pause`, `seek`, `chat`, `reaction`, `movie`) keep both clients in sync.
+1. Host creates a Firebase room (`rooms/{code}`).
+2. Guest joins the same path with the room code.
+3. Movie, playback, chat, and reactions are written under that room and streamed to both clients in real time.
 
-**Limits (by design):**
-
-- One host + one guest (single PeerJS connection)
-- Host tab must stay open; refreshing the host may require a new room if the Peer ID is still claimed briefly
-- Relies on the public PeerJS cloud for signaling
+**Limits:** designed for one host + one guest; video still downloads separately from R2 for each viewer.
 
 ## Project layout
 
 ```
-index.html      Landing — create / join
-library.html    Host movie picker
-theater.html    Player, chat, reactions
-css/styles.css
-js/movies.js    Your R2 URLs
-js/peer.js      Room + PeerJS protocol
-js/sync.js      Playback sync
-js/chat.js
-js/reactions.js
+index.html           Landing — create / join
+library.html         Host movie picker
+theater.html         Player, chat, reactions
+database.rules.json  RTDB security rules (paste into Firebase)
+js/firebase-config.js
+js/peer.js           Room API (Firebase-backed)
+js/sync.js / chat.js / reactions.js
 js/app.js / library.js / theater.js
 ```

@@ -25,6 +25,7 @@
   let chat = null;
   let reactions = null;
   let fullscreen = null;
+  let destroyed = false;
 
   function setConnUI(open) {
     connDot.classList.toggle("connected", !!open);
@@ -93,13 +94,11 @@
   function showWaiting() {
     waitingView.hidden = false;
     theaterView.hidden = true;
-    waitingStatus.textContent = "Connecting to host…";
+    waitingStatus.textContent = "Connecting to room…";
     waitingStatus.className = "status-msg";
   }
 
-  let wp = WatchPartyPeer.create();
-  let reconnectTimer = null;
-  let destroyed = false;
+  const wp = WatchPartyPeer.create();
 
   function broadcastMovieIfHost() {
     if (role === "host" && currentMovie && wp.connected) {
@@ -118,84 +117,50 @@
     }
   }
 
-  function bindPeerHandlers(instance) {
-    instance.on("connection", function (state) {
-      setConnUI(state.open);
-      if (state.open) {
-        if (reconnectTimer) {
-          clearTimeout(reconnectTimer);
-          reconnectTimer = null;
-        }
-        if (role === "guest" && !currentMovie) {
-          waitingStatus.textContent =
-            "Connected — waiting for the host to pick a movie…";
-          waitingStatus.className = "status-msg ok";
-        }
-        broadcastMovieIfHost();
-      } else if (!destroyed && role === "guest") {
-        if (!currentMovie) {
-          waitingStatus.textContent =
-            "Disconnected from host. Reconnecting…";
-          waitingStatus.className = "status-msg error";
-        }
-        scheduleGuestReconnect();
+  wp.on("connection", function (state) {
+    setConnUI(state.open);
+    if (state.open) {
+      if (role === "guest" && !currentMovie) {
+        waitingStatus.textContent =
+          "In the room — waiting for the host to pick a movie…";
+        waitingStatus.className = "status-msg ok";
       }
-    });
+      broadcastMovieIfHost();
+    }
+  });
 
-    instance.on("movie", function (msg) {
-      if (!msg.url) return;
-      showTheater({
-        id: msg.id,
-        title: msg.title,
-        url: msg.url,
-      });
+  wp.on("movie", function (msg) {
+    if (!msg.url) return;
+    showTheater({
+      id: msg.id,
+      title: msg.title,
+      url: msg.url,
     });
+  });
 
-    instance.on("play", function (msg) {
-      if (sync) sync.applyRemote(msg);
-    });
-    instance.on("pause", function (msg) {
-      if (sync) sync.applyRemote(msg);
-    });
-    instance.on("seek", function (msg) {
-      if (sync) sync.applyRemote(msg);
-    });
-    instance.on("chat", function (msg) {
-      if (chat) chat.onRemote(msg);
-    });
-    instance.on("reaction", function (msg) {
-      if (reactions) reactions.onRemote(msg);
-    });
+  wp.on("play", function (msg) {
+    if (sync) sync.applyRemote(msg);
+  });
+  wp.on("pause", function (msg) {
+    if (sync) sync.applyRemote(msg);
+  });
+  wp.on("seek", function (msg) {
+    if (sync) sync.applyRemote(msg);
+  });
+  wp.on("chat", function (msg) {
+    if (chat) chat.onRemote(msg);
+  });
+  wp.on("reaction", function (msg) {
+    if (reactions) reactions.onRemote(msg);
+  });
 
-    instance.on("error", function (err) {
-      if (!waitingView.hidden) {
-        waitingStatus.textContent = err.message || "Connection error";
-        waitingStatus.className = "status-msg error";
-      }
-      console.error(err);
-    });
-  }
-
-  function scheduleGuestReconnect() {
-    if (destroyed || role !== "guest" || reconnectTimer) return;
-    reconnectTimer = setTimeout(function () {
-      reconnectTimer = null;
-      if (destroyed || wp.connected) return;
-      wp.destroy();
-      wp = WatchPartyPeer.create();
-      bindPeerHandlers(wp);
-      wp
-        .resumeGuest(roomCode)
-        .then(function () {
-          setConnUI(wp.connected);
-        })
-        .catch(function () {
-          scheduleGuestReconnect();
-        });
-    }, 2000);
-  }
-
-  bindPeerHandlers(wp);
+  wp.on("error", function (err) {
+    if (!waitingView.hidden) {
+      waitingStatus.textContent = err.message || "Connection error";
+      waitingStatus.className = "status-msg error";
+    }
+    console.error(err);
+  });
 
   // Initial UI
   if (currentMovie && currentMovie.url) {
@@ -209,31 +174,33 @@
   }
 
   const start =
-    role === "host"
-      ? wp.resumeHost(roomCode)
-      : wp.resumeGuest(roomCode);
+    role === "host" ? wp.resumeHost(roomCode) : wp.resumeGuest(roomCode);
 
   start
     .then(function () {
       setConnUI(wp.connected);
       broadcastMovieIfHost();
+      if (role === "guest" && !currentMovie) {
+        waitingStatus.textContent =
+          "In the room — waiting for the host to pick a movie…";
+        waitingStatus.className = "status-msg ok";
+      }
     })
     .catch(function (err) {
       setConnUI(false);
       if (role === "host") {
-        alert(err.message || "Could not reopen the room. Create a new room.");
+        alert(err.message || "Could not open the room.");
         window.location.href = "index.html";
       } else {
         waitingStatus.textContent =
-          (err.message || "Could not connect.") + " Retrying…";
+          (err.message || "Could not join room.") +
+          " Check the code and that the host created the room.";
         waitingStatus.className = "status-msg error";
-        scheduleGuestReconnect();
       }
     });
 
   window.addEventListener("beforeunload", function () {
     destroyed = true;
-    if (reconnectTimer) clearTimeout(reconnectTimer);
     wp.destroy();
   });
 })();
