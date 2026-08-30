@@ -108,11 +108,17 @@
   }
 
   function selectMovie(movie) {
+    const quality = WatchPartyQualities.pickInitialQuality(movie);
+    const url = WatchPartyQualities.resolveUrl(movie, quality) || movie.url;
     const payload = {
       id: movie.id,
       title: movie.title,
-      url: movie.url,
+      url: url,
+      quality: quality || "",
+      sources: movie.sources || {},
+      qualities: movie.qualities || [],
     };
+    if (quality) WatchPartyQualities.savePreferredQuality(quality);
     WatchPartyPeer.saveSession({
       role: "host",
       roomCode: roomCode,
@@ -166,6 +172,18 @@
 
       btn.appendChild(poster);
       btn.appendChild(title);
+
+      if (movie.qualities && movie.qualities.length) {
+        const badge = document.createElement("div");
+        badge.className = "movie-qualities";
+        badge.textContent = movie.qualities
+          .map(function (q) {
+            return q + "p";
+          })
+          .join(" · ");
+        btn.appendChild(badge);
+      }
+
       btn.addEventListener("click", function () {
         selectMovie(movie);
       });
@@ -190,7 +208,7 @@
             (data && data.error) || "Movie list returned invalid data"
           );
         }
-        renderMovies(data);
+        renderMovies(WatchPartyQualities.groupMovies(data));
       })
       .catch(function (err) {
         setLibraryStatus(

@@ -33,6 +33,17 @@ The library fetches:
 
 Upload `.mp4` files to your R2 bucket; refresh the library to see them. No need to edit `js/movies.js` for new episodes.
 
+### Multiple qualities (480p / 720p)
+
+Name pairs the same except for the quality token:
+
+```
+Show.S01E01.Title.720P.Bluray....mp4
+Show.S01E01.Title.480P.Bluray....mp4
+```
+
+The site groups those into **one** library card and shows a **Quality** dropdown in the theater (each person can pick 480 or 720; sync stays on time).
+
 ### R2 CORS
 
 Allow your GitHub Pages origin (and `http://localhost:8080`) for `GET` / `HEAD`.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Theater — Watch Party</title>
-    <link rel="stylesheet" href="css/styles.css?v=17" />
+    <link rel="stylesheet" href="css/styles.css?v=18" />
   </head>
   <body class="theater-page">
     <div class="page">
@@ -37,7 +37,13 @@
 
       <div class="theater-layout" id="theater-view" hidden>
         <div class="player-column">
-          <p class="now-playing">Now playing: <strong id="movie-title">—</strong></p>
+          <p class="now-playing">
+            Now playing: <strong id="movie-title">—</strong>
+            <label class="quality-picker" id="quality-picker" hidden>
+              <span class="quality-picker-label">Quality</span>
+              <select id="quality-select" aria-label="Video quality"></select>
+            </label>
+          </p>
           <p class="party-status" id="party-status" role="status" hidden></p>
           <div class="player-shell" id="player-shell">
             <div class="video-stage">
@@ -109,11 +115,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js?v=15"></script>
-    <script src="js/peer.js?v=17"></script>
+    <script src="js/peer.js?v=18"></script>
+    <script src="js/qualities.js?v=1"></script>
     <script src="js/sync.js?v=15"></script>
     <script src="js/chat.js?v=15"></script>
     <script src="js/reactions.js?v=15"></script>
     <script src="js/fullscreen.js?v=5"></script>
-    <script src="js/theater.js?v=17"></script>
+    <script src="js/theater.js?v=18"></script>
   </body>
 </html>

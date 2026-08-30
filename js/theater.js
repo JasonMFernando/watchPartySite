@@ -13,6 +13,8 @@
   const waitingCopy = document.getElementById("waiting-copy");
   const movieTitleEl = document.getElementById("movie-title");
   const partyStatus = document.getElementById("party-status");
+  const qualityPicker = document.getElementById("quality-picker");
+  const qualitySelect = document.getElementById("quality-select");
   const video = document.getElementById("player");
   const changeMovieBtn = document.getElementById("change-movie-btn");
 
@@ -34,6 +36,8 @@
   let hostLeftHandled = false;
   let leaveTimer = null;
   let guestWasOnline = false;
+  let switchingQuality = false;
+  let currentQuality = "";
 
   if (changeMovieBtn && role === "host") {
     changeMovieBtn.hidden = false;
@@ -63,26 +67,119 @@
     partyStatus.className = "party-status" + (kind ? " " + kind : "");
   }
 
-  function showTheater(movie) {
-    currentMovie = movie;
+  function updateQualityPicker(movie) {
+    if (!qualityPicker || !qualitySelect) return;
+    const quals = WatchPartyQualities.availableQualities(movie);
+    qualitySelect.innerHTML = "";
+    if (quals.length < 2) {
+      qualityPicker.hidden = true;
+      return;
+    }
+    quals.forEach(function (q) {
+      const opt = document.createElement("option");
+      opt.value = q;
+      opt.textContent = q + "p";
+      qualitySelect.appendChild(opt);
+    });
+    const selected =
+      (currentQuality && quals.indexOf(currentQuality) !== -1
+        ? currentQuality
+        : WatchPartyQualities.pickInitialQuality(movie)) || quals[0];
+    qualitySelect.value = selected;
+    currentQuality = selected;
+    qualityPicker.hidden = false;
+  }
+
+  function applyVideoUrl(url, opts) {
+    opts = opts || {};
+    if (!url) return;
+    const keepTime = typeof opts.currentTime === "number" ? opts.currentTime : 0;
+    const shouldPlay = !!opts.shouldPlay;
+
+    video.setAttribute("data-movie-url", url);
+    switchingQuality = true;
+    video.src = url;
+    video.load();
+
+    function onReady() {
+      video.removeEventListener("loadedmetadata", onReady);
+      try {
+        if (keepTime > 0 && isFinite(keepTime)) {
+          video.currentTime = keepTime;
+        }
+      } catch (_) {}
+      switchingQuality = false;
+      if (shouldPlay) {
+        const p = video.play();
+        if (p && p.catch) p.catch(function () {});
+      }
+    }
+    video.addEventListener("loadedmetadata", onReady);
+  }
+
+  function switchQuality(quality) {
+    if (!currentMovie || !quality) return;
+    const nextUrl = WatchPartyQualities.resolveUrl(currentMovie, quality);
+    if (!nextUrl || nextUrl === video.getAttribute("data-movie-url")) {
+      currentQuality = quality;
+      return;
+    }
+    const t = video.currentTime || 0;
+    const playing = !video.paused;
+    currentQuality = quality;
+    WatchPartyQualities.savePreferredQuality(quality);
+    currentMovie = Object.assign({}, currentMovie, {
+      url: nextUrl,
+      quality: quality,
+    });
     WatchPartyPeer.saveSession({
       role: role,
       roomCode: roomCode,
-      movie: movie,
+      movie: currentMovie,
+    });
+    applyVideoUrl(nextUrl, { currentTime: t, shouldPlay: playing });
+  }
+
+  if (qualitySelect) {
+    qualitySelect.addEventListener("change", function () {
+      switchQuality(qualitySelect.value);
+    });
+  }
+
+  function showTheater(movie) {
+    const quality =
+      WatchPartyQualities.pickInitialQuality(movie) || movie.quality || "";
+    const url =
+      WatchPartyQualities.resolveUrl(movie, quality) || movie.url || "";
+    currentQuality = quality;
+    currentMovie = Object.assign({}, movie, {
+      url: url,
+      quality: quality,
+      sources: movie.sources || {},
+      qualities: WatchPartyQualities.availableQualities(movie),
+    });
+
+    WatchPartyPeer.saveSession({
+      role: role,
+      roomCode: roomCode,
+      movie: currentMovie,
     });
 
     waitingView.hidden = true;
     theaterView.hidden = false;
-    movieTitleEl.textContent = movie.title || "Untitled";
+    movieTitleEl.textContent = currentMovie.title || "Untitled";
+    updateQualityPicker(currentMovie);
 
-    if (video.getAttribute("data-movie-url") !== movie.url) {
-      video.setAttribute("data-movie-url", movie.url);
-      video.src = movie.url;
-      video.load();
+    if (video.getAttribute("data-movie-url") !== url) {
+      applyVideoUrl(url, {
+        currentTime: 0,
+        shouldPlay: false,
+      });
     }
 
     if (!sync) {
       sync = WatchPartySync.create(video, function (msg) {
+        if (switchingQuality) return;
         if (wp) wp.send(msg);
       });
     }
@@ -127,6 +224,8 @@
     waitingView.hidden = false;
     theaterView.hidden = true;
     setPartyStatus("");
+    if (qualityPicker) qualityPicker.hidden = true;
+    currentQuality = "";
     try {
       video.pause();
     } catch (_) {}
@@ -212,6 +311,9 @@
         id: currentMovie.id,
         title: currentMovie.title,
         url: currentMovie.url,
+        quality: currentMovie.quality || "",
+        sources: currentMovie.sources || {},
+        qualities: currentMovie.qualities || [],
         at: Date.now(),
       });
       wp.send({
@@ -282,13 +384,16 @@
   });
 
   wp.on("movie", function (msg) {
-    if (!msg.url) return;
+    if (!msg.url && !(msg.sources && Object.keys(msg.sources).length)) return;
     hostPicking = false;
     setPartyStatus("");
     showTheater({
       id: msg.id,
       title: msg.title,
       url: msg.url,
+      quality: msg.quality || "",
+      sources: msg.sources || {},
+      qualities: msg.qualities || [],
     });
   });
 

@@ -110,6 +110,9 @@
           id: movie.id,
           title: movie.title,
           url: movie.url,
+          quality: movie.quality || "",
+          sources: movie.sources || null,
+          qualities: movie.qualities || null,
           at: movie.at || Date.now(),
         });
       });
@@ -281,13 +284,21 @@
 
       try {
         if (msg.type === "movie") {
-          api._roomRef.child("movie").set({
+          const moviePayload = {
             id: msg.id || "",
             title: msg.title || "",
             url: msg.url || "",
             at: at,
             by: api.clientId,
-          });
+          };
+          if (msg.quality) moviePayload.quality = String(msg.quality);
+          if (msg.sources && typeof msg.sources === "object") {
+            moviePayload.sources = msg.sources;
+          }
+          if (Array.isArray(msg.qualities)) {
+            moviePayload.qualities = msg.qualities;
+          }
+          api._roomRef.child("movie").set(moviePayload);
           return true;
         }
 
