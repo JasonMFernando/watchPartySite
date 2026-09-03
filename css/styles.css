@@ -729,9 +729,16 @@ body.player-fs-lock {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.player-pickers {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.85rem;
+  margin-left: auto;
 }
 
 .quality-picker-label {

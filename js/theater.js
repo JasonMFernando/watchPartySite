@@ -15,6 +15,8 @@
   const partyStatus = document.getElementById("party-status");
   const qualityPicker = document.getElementById("quality-picker");
   const qualitySelect = document.getElementById("quality-select");
+  const speedPicker = document.getElementById("speed-picker");
+  const speedSelect = document.getElementById("speed-select");
   const video = document.getElementById("player");
   const changeMovieBtn = document.getElementById("change-movie-btn");
 
@@ -38,6 +40,7 @@
   let guestWasOnline = false;
   let switchingQuality = false;
   let currentQuality = "";
+  let currentPlaybackRate = 1;
 
   if (changeMovieBtn && role === "host") {
     changeMovieBtn.hidden = false;
@@ -90,11 +93,25 @@
     qualityPicker.hidden = false;
   }
 
+  function setSpeedUI(rate) {
+    const n = Number(rate);
+    if (!isFinite(n) || n <= 0) return;
+    currentPlaybackRate = n;
+    if (!speedSelect) return;
+    const val = String(n);
+    const has = Array.prototype.some.call(speedSelect.options, function (opt) {
+      return opt.value === val;
+    });
+    if (has) speedSelect.value = val;
+  }
+
   function applyVideoUrl(url, opts) {
     opts = opts || {};
     if (!url) return;
     const keepTime = typeof opts.currentTime === "number" ? opts.currentTime : 0;
     const shouldPlay = !!opts.shouldPlay;
+    const rate =
+      typeof opts.rate === "number" ? opts.rate : currentPlaybackRate || 1;
 
     video.setAttribute("data-movie-url", url);
     switchingQuality = true;
@@ -108,6 +125,10 @@
           video.currentTime = keepTime;
         }
       } catch (_) {}
+      try {
+        video.playbackRate = rate;
+      } catch (_) {}
+      setSpeedUI(rate);
       switchingQuality = false;
       if (shouldPlay) {
         const p = video.play();
@@ -137,12 +158,25 @@
       roomCode: roomCode,
       movie: currentMovie,
     });
-    applyVideoUrl(nextUrl, { currentTime: t, shouldPlay: playing });
+    applyVideoUrl(nextUrl, {
+      currentTime: t,
+      shouldPlay: playing,
+      rate: currentPlaybackRate,
+    });
   }
 
   if (qualitySelect) {
     qualitySelect.addEventListener("change", function () {
       switchQuality(qualitySelect.value);
+    });
+  }
+
+  if (speedSelect) {
+    speedSelect.addEventListener("change", function () {
+      const n = Number(speedSelect.value);
+      if (!isFinite(n) || n <= 0) return;
+      currentPlaybackRate = n;
+      video.playbackRate = n;
     });
   }
 
@@ -169,12 +203,17 @@
     theaterView.hidden = false;
     movieTitleEl.textContent = currentMovie.title || "Untitled";
     updateQualityPicker(currentMovie);
+    if (speedPicker) speedPicker.hidden = false;
 
     if (video.getAttribute("data-movie-url") !== url) {
+      setSpeedUI(1);
       applyVideoUrl(url, {
         currentTime: 0,
         shouldPlay: false,
+        rate: 1,
       });
+    } else {
+      setSpeedUI(video.playbackRate || currentPlaybackRate || 1);
     }
 
     if (!sync) {
@@ -225,7 +264,10 @@
     theaterView.hidden = true;
     setPartyStatus("");
     if (qualityPicker) qualityPicker.hidden = true;
+    if (speedPicker) speedPicker.hidden = true;
     currentQuality = "";
+    currentPlaybackRate = 1;
+    if (speedSelect) speedSelect.value = "1";
     try {
       video.pause();
     } catch (_) {}
@@ -319,6 +361,7 @@
       wp.send({
         type: video.paused ? "pause" : "play",
         currentTime: video.currentTime || 0,
+        rate: currentPlaybackRate || 1,
         at: Date.now(),
       });
     }
@@ -408,14 +451,22 @@
     }
   });
 
-  wp.on("play", function (msg) {
+  function applyPlayback(msg) {
     if (sync) sync.applyRemote(msg);
+    if (typeof msg.rate === "number") setSpeedUI(msg.rate);
+  }
+
+  wp.on("play", function (msg) {
+    applyPlayback(msg);
   });
   wp.on("pause", function (msg) {
-    if (sync) sync.applyRemote(msg);
+    applyPlayback(msg);
   });
   wp.on("seek", function (msg) {
-    if (sync) sync.applyRemote(msg);
+    applyPlayback(msg);
+  });
+  wp.on("rate", function (msg) {
+    applyPlayback(msg);
   });
   wp.on("chat", function (msg) {
     if (chat) chat.onRemote(msg);

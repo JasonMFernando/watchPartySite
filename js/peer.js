@@ -316,15 +316,20 @@
         if (
           msg.type === "play" ||
           msg.type === "pause" ||
-          msg.type === "seek"
+          msg.type === "seek" ||
+          msg.type === "rate"
         ) {
-          api._roomRef.child("playback").set({
+          const playback = {
             type: msg.type,
             currentTime: typeof msg.currentTime === "number" ? msg.currentTime : 0,
             at: at,
             by: api.clientId,
             role: api.role,
-          });
+          };
+          if (typeof msg.rate === "number" && isFinite(msg.rate)) {
+            playback.rate = msg.rate;
+          }
+          api._roomRef.child("playback").set(playback);
           return true;
         }
 
