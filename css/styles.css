@@ -801,6 +801,77 @@ body.player-fs-lock {
   transform: scale(0.95);
 }
 
+.emoji-btn.is-kb-focus {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.35);
+}
+
+/* Fullscreen quick chat (T) */
+.fs-quick-chat {
+  position: absolute;
+  left: 50%;
+  bottom: 5.5rem;
+  transform: translateX(-50%);
+  z-index: 6;
+  width: min(92%, 28rem);
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(12, 12, 18, 0.94);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.player-shell:not(:fullscreen):not(:-webkit-full-screen):not(.is-fs) .fs-quick-chat {
+  display: none !important;
+}
+
+.fs-quick-chat[hidden] {
+  display: none !important;
+}
+
+.fs-quick-chat-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fs-quick-chat input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.85rem;
+  outline: none;
+}
+
+.fs-quick-chat input:focus {
+  border-color: var(--accent);
+}
+
+.player-shell.is-fs .fs-quick-chat,
+.player-shell:fullscreen .fs-quick-chat,
+.player-shell:-webkit-full-screen .fs-quick-chat {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.player-shell.is-fs.reactions-collapsed .fs-quick-chat,
+.player-shell:fullscreen.reactions-collapsed .fs-quick-chat,
+.player-shell:-webkit-full-screen.reactions-collapsed .fs-quick-chat {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* Chat sidebar */
 .chat-panel {
   display: flex;

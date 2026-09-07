@@ -33,6 +33,7 @@
   let chat = null;
   let reactions = null;
   let fullscreen = null;
+  let shortcuts = null;
   let destroyed = false;
   let hostPicking = false;
   let hostLeftHandled = false;
@@ -254,6 +255,16 @@
         shellEl: document.getElementById("player-shell"),
         videoEl: video,
         toggleBtn: document.getElementById("fs-toggle"),
+      });
+    }
+    if (!shortcuts && fullscreen && reactions && chat) {
+      shortcuts = WatchPartyShortcuts.create({
+        fullscreen: fullscreen,
+        reactions: reactions,
+        chat: chat,
+        shellEl: document.getElementById("player-shell"),
+        quickForm: document.getElementById("fs-quick-chat"),
+        quickInput: document.getElementById("fs-quick-chat-input"),
       });
     }
   }
@@ -525,6 +536,7 @@
   window.addEventListener("beforeunload", function () {
     destroyed = true;
     if (leaveTimer) clearTimeout(leaveTimer);
+    if (shortcuts && shortcuts.destroy) shortcuts.destroy();
     wp.destroy();
   });
 })();

@@ -17,12 +17,15 @@
       (barEl && barEl.closest(".player-shell"));
 
     let dnd = false;
+    let keyboardIndex = -1;
+    const buttons = [];
 
     if (!barEl) {
       return {
         onRemote: function () {},
         spawn: function () {},
         spawnChat: function () {},
+        fire: function () {},
         setCollapsed: function () {},
         isCollapsed: function () {
           return false;
@@ -31,6 +34,12 @@
         isDnd: function () {
           return false;
         },
+        hasKeyboardFocus: function () {
+          return false;
+        },
+        clearKeyboardFocus: function () {},
+        moveKeyboardFocus: function () {},
+        confirmKeyboardFocus: function () {},
       };
     }
 
@@ -70,6 +79,68 @@
       }, 3600);
     }
 
+    function fire(emoji) {
+      if (!emoji) return;
+      spawn(emoji);
+      if (typeof sendFn === "function") {
+        sendFn({
+          type: "reaction",
+          emoji: emoji,
+          at: Date.now(),
+        });
+      }
+    }
+
+    function paintKeyboardFocus() {
+      buttons.forEach(function (btn, i) {
+        const on = i === keyboardIndex;
+        btn.classList.toggle("is-kb-focus", on);
+        if (on) btn.setAttribute("aria-current", "true");
+        else btn.removeAttribute("aria-current");
+      });
+      if (shellEl) {
+        shellEl.classList.toggle("kb-reaction-focus", keyboardIndex >= 0);
+      }
+    }
+
+    function clearKeyboardFocus() {
+      keyboardIndex = -1;
+      paintKeyboardFocus();
+    }
+
+    function hasKeyboardFocus() {
+      return keyboardIndex >= 0;
+    }
+
+    function moveKeyboardFocus(delta) {
+      if (!buttons.length) return;
+      if (isCollapsed()) setCollapsed(false);
+      if (keyboardIndex < 0) {
+        keyboardIndex = delta < 0 ? buttons.length - 1 : 0;
+      } else {
+        keyboardIndex =
+          (keyboardIndex + delta + buttons.length) % buttons.length;
+      }
+      paintKeyboardFocus();
+      const btn = buttons[keyboardIndex];
+      if (btn && typeof btn.scrollIntoView === "function") {
+        try {
+          btn.scrollIntoView({
+            block: "nearest",
+            inline: "nearest",
+            behavior: "smooth",
+          });
+        } catch (_) {}
+      }
+    }
+
+    function confirmKeyboardFocus() {
+      if (keyboardIndex < 0 || !buttons[keyboardIndex]) return false;
+      const emoji = buttons[keyboardIndex].textContent;
+      fire(emoji);
+      return true;
+    }
+
     barEl.innerHTML = "";
 
     EMOJIS.forEach(function (emoji) {
@@ -81,16 +152,11 @@
       btn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        spawn(emoji);
-        if (typeof sendFn === "function") {
-          sendFn({
-            type: "reaction",
-            emoji: emoji,
-            at: Date.now(),
-          });
-        }
+        clearKeyboardFocus();
+        fire(emoji);
       });
       barEl.appendChild(btn);
+      buttons.push(btn);
     });
 
     function isCollapsed() {
@@ -114,6 +180,8 @@
         toggleBtn.title = collapsed ? "Show reactions" : "Hide reactions";
         toggleBtn.classList.toggle("is-collapsed", collapsed);
       }
+
+      if (collapsed) clearKeyboardFocus();
 
       try {
         localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
@@ -188,10 +256,15 @@
       onRemote: onRemote,
       spawn: spawn,
       spawnChat: spawnChat,
+      fire: fire,
       setCollapsed: setCollapsed,
       isCollapsed: isCollapsed,
       setDnd: setDnd,
       isDnd: isDnd,
+      hasKeyboardFocus: hasKeyboardFocus,
+      clearKeyboardFocus: clearKeyboardFocus,
+      moveKeyboardFocus: moveKeyboardFocus,
+      confirmKeyboardFocus: confirmKeyboardFocus,
     };
   }
 

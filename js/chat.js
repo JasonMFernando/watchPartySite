@@ -31,18 +31,27 @@
       }
     }
 
+    function sendText(raw) {
+      const text = String(raw || "").trim();
+      if (!text) return false;
+      const from = role === "host" ? "Host" : "Guest";
+      appendMessage(text, from, true);
+      if (typeof sendFn === "function") {
+        sendFn({
+          type: "chat",
+          text: text,
+          from: from,
+          at: Date.now(),
+        });
+      }
+      return true;
+    }
+
     formEl.addEventListener("submit", function (e) {
       e.preventDefault();
       const text = (inputEl.value || "").trim();
       if (!text) return;
-      const from = role === "host" ? "Host" : "Guest";
-      appendMessage(text, from, true);
-      sendFn({
-        type: "chat",
-        text: text,
-        from: from,
-        at: Date.now(),
-      });
+      sendText(text);
       inputEl.value = "";
       inputEl.focus();
     });
@@ -52,7 +61,11 @@
       appendMessage(msg.text, msg.from || "Guest", false);
     }
 
-    return { onRemote: onRemote, appendMessage: appendMessage };
+    return {
+      onRemote: onRemote,
+      appendMessage: appendMessage,
+      sendText: sendText,
+    };
   }
 
   global.WatchPartyChat = { create: createChat };

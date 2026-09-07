@@ -14,6 +14,7 @@
     }
 
     let fake = false;
+    let holdExitUntil = 0;
 
     function isDocFs() {
       const fsEl =
@@ -25,6 +26,18 @@
 
     function isActive() {
       return fake || isDocFs();
+    }
+
+    function isHoldingExit() {
+      return Date.now() < holdExitUntil;
+    }
+
+    function holdExit(ms) {
+      holdExitUntil = Date.now() + (typeof ms === "number" ? ms : 700);
+    }
+
+    function clearHoldExit() {
+      holdExitUntil = 0;
     }
 
     function updateBtn() {
@@ -43,7 +56,10 @@
     }
 
     function enterFake() {
-      if (fake) return;
+      if (fake) {
+        updateBtn();
+        return;
+      }
       fake = true;
       shellEl.classList.add("is-fs");
       document.documentElement.classList.add("player-fs-lock");
@@ -53,6 +69,7 @@
 
     function exitFake() {
       if (!fake) return;
+      if (isHoldingExit()) return;
       fake = false;
       shellEl.classList.remove("is-fs");
       document.documentElement.classList.remove("player-fs-lock");
@@ -84,8 +101,6 @@
 
     function enter() {
       if (isActive()) return;
-      // Prefer real Fullscreen API when the shell can host overlays.
-      // Fall back to CSS fake-fullscreen (needed on many iOS versions).
       const canShellFs = typeof shellEl.requestFullscreen === "function";
       if (canShellFs) {
         requestDocFs().catch(function () {
@@ -97,9 +112,24 @@
       updateBtn();
     }
 
+    /** Stay fullscreen after an Esc that only dismissed an overlay. */
+    function reclaim() {
+      if (isActive()) {
+        updateBtn();
+        return;
+      }
+      // Fake FS needs no user gesture — reliable after browser Esc-exits doc FS.
+      enterFake();
+    }
+
     function exit() {
+      clearHoldExit();
       if (fake) {
-        exitFake();
+        fake = false;
+        shellEl.classList.remove("is-fs");
+        document.documentElement.classList.remove("player-fs-lock");
+        document.body.classList.remove("player-fs-lock");
+        updateBtn();
         return;
       }
       exitDocFs().then(updateBtn);
@@ -111,17 +141,28 @@
     }
 
     function onFsChange() {
-      if (!isDocFs() && !fake) {
+      if (isDocFs()) {
+        // Real FS won — drop fake duplicate if any.
+        if (fake) {
+          fake = false;
+          shellEl.classList.remove("is-fs");
+          document.documentElement.classList.remove("player-fs-lock");
+          document.body.classList.remove("player-fs-lock");
+        }
         updateBtn();
-      } else if (isDocFs()) {
-        exitFake();
-        updateBtn();
-      } else {
-        updateBtn();
+        return;
       }
+
+      // Browser exited native FS (often Esc). If UI consumed Esc, stay fullscreen via fake.
+      if (isHoldingExit()) {
+        enterFake();
+        return;
+      }
+
+      if (!fake) updateBtn();
+      else updateBtn();
     }
 
-    // iOS native video fullscreen cannot show HTML overlays — redirect.
     function onWebkitBegin() {
       setTimeout(function () {
         if (typeof videoEl.webkitExitFullscreen === "function") {
@@ -147,11 +188,7 @@
     document.addEventListener("webkitfullscreenchange", onFsChange);
     videoEl.addEventListener("webkitbeginfullscreen", onWebkitBegin);
 
-    document.addEventListener("keydown", function onKey(e) {
-      if (e.key === "Escape" && fake) {
-        exitFake();
-      }
-    });
+    // Esc exit for fake FS is owned by shortcuts (layered: chat → reactions → exit).
 
     updateBtn();
 
@@ -160,8 +197,18 @@
       exit: exit,
       toggle: toggle,
       isActive: isActive,
+      holdExit: holdExit,
+      clearHoldExit: clearHoldExit,
+      isHoldingExit: isHoldingExit,
+      reclaim: reclaim,
       destroy: function () {
-        exitFake();
+        clearHoldExit();
+        if (fake) {
+          fake = false;
+          shellEl.classList.remove("is-fs");
+          document.documentElement.classList.remove("player-fs-lock");
+          document.body.classList.remove("player-fs-lock");
+        }
         document.removeEventListener("fullscreenchange", onFsChange);
         document.removeEventListener("webkitfullscreenchange", onFsChange);
         videoEl.removeEventListener("webkitbeginfullscreen", onWebkitBegin);
