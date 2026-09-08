@@ -72,6 +72,8 @@
       _roomRef: null,
       _unsubs: [],
       _presenceRef: null,
+      _presenceConnectedBound: false,
+      _presenceHeartbeat: null,
     };
 
     function emit(event, payload) {
@@ -201,7 +203,34 @@
       });
     }
 
+    function clearSameRolePresence() {
+      if (!api._roomRef || !api.role) return Promise.resolve();
+      return api._roomRef
+        .child("presence")
+        .once("value")
+        .then(function (snap) {
+          const all = snap.val() || {};
+          const tasks = [];
+          Object.keys(all).forEach(function (key) {
+            if (key === api.clientId) return;
+            const p = all[key];
+            if (p && p.role === api.role) {
+              tasks.push(
+                api._roomRef
+                  .child("presence")
+                  .child(key)
+                  .remove()
+                  .catch(function () {})
+              );
+            }
+          });
+          return Promise.all(tasks);
+        })
+        .catch(function () {});
+    }
+
     function attachPresence() {
+      if (!api._roomRef || !api.role) return Promise.resolve();
       const presenceRef = api._roomRef.child("presence").child(api.clientId);
       api._presenceRef = presenceRef;
       const payload = {
@@ -216,6 +245,48 @@
         .catch(function (err) {
           console.warn("presence failed", err);
         });
+    }
+
+    function startPresence() {
+      return clearSameRolePresence().then(function () {
+        return attachPresence();
+      });
+    }
+
+    function bindPresenceLifecycle() {
+      if (!api._db || api._presenceConnectedBound) return;
+      api._presenceConnectedBound = true;
+
+      const connectedRef = api._db.ref(".info/connected");
+      const connectedHandler = connectedRef.on("value", function (snap) {
+        if (snap.val() !== true) return;
+        if (!api._roomRef || !api.role) return;
+        // Firebase fires onDisconnect after reconnect — re-claim presence.
+        startPresence();
+      });
+      api._unsubs.push(function () {
+        connectedRef.off("value", connectedHandler);
+        api._presenceConnectedBound = false;
+      });
+
+      // Keep presence fresh so a dropped onDisconnect cannot leave us invisible.
+      if (api._presenceHeartbeat) {
+        clearInterval(api._presenceHeartbeat);
+      }
+      api._presenceHeartbeat = setInterval(function () {
+        if (!api._presenceRef || !api.role) return;
+        api._presenceRef
+          .update({ at: Date.now(), role: api.role })
+          .catch(function () {
+            attachPresence();
+          });
+      }, 20000);
+      api._unsubs.push(function () {
+        if (api._presenceHeartbeat) {
+          clearInterval(api._presenceHeartbeat);
+          api._presenceHeartbeat = null;
+        }
+      });
     }
 
     function joinRoom(roomCode, role, createIfMissing) {
@@ -255,7 +326,8 @@
 
             return Promise.all(tasks).then(function () {
               bindRoomListeners();
-              return attachPresence();
+              bindPresenceLifecycle();
+              return startPresence();
             });
           })
           .then(function () {
@@ -396,6 +468,12 @@
         } catch (_) {}
       });
       api._unsubs = [];
+
+      if (api._presenceHeartbeat) {
+        clearInterval(api._presenceHeartbeat);
+        api._presenceHeartbeat = null;
+      }
+      api._presenceConnectedBound = false;
 
       if (api._presenceRef) {
         try {
