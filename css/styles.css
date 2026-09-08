@@ -497,6 +497,11 @@ body.theater-page .page {
   grid-template-columns: 1fr minmax(260px, 320px);
   min-height: 0;
   overflow: hidden;
+  position: relative;
+}
+
+.theater-layout.chat-collapsed {
+  grid-template-columns: 1fr;
 }
 
 .player-column {
@@ -883,6 +888,10 @@ body.player-fs-lock {
   overflow: hidden;
 }
 
+.chat-panel[hidden] {
+  display: none !important;
+}
+
 .chat-header {
   flex-shrink: 0;
   padding: 0.9rem 1rem;
@@ -892,6 +901,60 @@ body.player-fs-lock {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chat-hide-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-hide-btn:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--bg-hover);
+}
+
+.chat-show-btn {
+  position: absolute;
+  top: 1rem;
+  right: 0.75rem;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.chat-show-btn:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.chat-show-btn[hidden] {
+  display: none !important;
 }
 
 .chat-messages {
@@ -1034,11 +1097,21 @@ body.player-fs-lock {
     grid-template-rows: minmax(0, 1fr) minmax(220px, 38vh);
   }
 
+  .theater-layout.chat-collapsed {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
   .chat-panel {
     border-left: none;
     border-top: 1px solid var(--border);
     height: auto;
     min-height: 0;
+  }
+
+  .chat-show-btn {
+    top: auto;
+    bottom: 1rem;
+    right: 0.75rem;
   }
 
   .video-stage {
