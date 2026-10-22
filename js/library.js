@@ -107,9 +107,14 @@
       "theater.html?room=" + encodeURIComponent(roomCode) + "&role=host";
   }
 
+  function qualitiesApi() {
+    return window.WatchPartyQualities || null;
+  }
+
   function selectMovie(movie) {
-    const quality = WatchPartyQualities.pickInitialQuality(movie);
-    const url = WatchPartyQualities.resolveUrl(movie, quality) || movie.url;
+    const api = qualitiesApi();
+    const quality = api ? api.pickInitialQuality(movie) : "";
+    const url = (api && api.resolveUrl(movie, quality)) || movie.url;
     const payload = {
       id: movie.id,
       title: movie.title,
@@ -118,7 +123,7 @@
       sources: movie.sources || {},
       qualities: movie.qualities || [],
     };
-    if (quality) WatchPartyQualities.savePreferredQuality(quality);
+    if (quality && api) api.savePreferredQuality(quality);
     WatchPartyPeer.saveSession({
       role: "host",
       roomCode: roomCode,
@@ -208,7 +213,8 @@
             (data && data.error) || "Movie list returned invalid data"
           );
         }
-        renderMovies(WatchPartyQualities.groupMovies(data));
+        const api = qualitiesApi();
+        renderMovies(api ? api.groupMovies(data) : data);
       })
       .catch(function (err) {
         setLibraryStatus(
