@@ -17,6 +17,8 @@
   const qualitySelect = document.getElementById("quality-select");
   const speedPicker = document.getElementById("speed-picker");
   const speedSelect = document.getElementById("speed-select");
+  const realtimePicker = document.getElementById("realtime-picker");
+  const realtimeToggle = document.getElementById("realtime-toggle");
   const video = document.getElementById("player");
   const changeMovieBtn = document.getElementById("change-movie-btn");
 
@@ -42,6 +44,8 @@
   let switchingQuality = false;
   let currentQuality = "";
   let currentPlaybackRate = 1;
+  let realtimeOn = true;
+  let applyingRealtime = false;
 
   if (changeMovieBtn && role === "host") {
     changeMovieBtn.hidden = false;
@@ -181,6 +185,29 @@
     });
   }
 
+  if (realtimeToggle) {
+    realtimeToggle.disabled = role !== "host";
+    if (realtimePicker) {
+      realtimePicker.title =
+        role === "host"
+          ? "On: keep both playheads locked. Off: only play, pause, seek, and speed — no rewind while watching."
+          : "The host controls real-time sync.";
+    }
+    realtimeToggle.addEventListener("change", function () {
+      if (applyingRealtime || role !== "host") return;
+      if (wp) wp.send({ type: "realtime", on: realtimeToggle.checked, at: Date.now() });
+    });
+  }
+
+  function setRealtime(on) {
+    realtimeOn = on !== false;
+    if (sync && sync.setRealtime) sync.setRealtime(realtimeOn);
+    if (!realtimeToggle) return;
+    applyingRealtime = true;
+    realtimeToggle.checked = realtimeOn;
+    applyingRealtime = false;
+  }
+
   function showTheater(movie) {
     const quality =
       WatchPartyQualities.pickInitialQuality(movie) || movie.quality || "";
@@ -205,6 +232,7 @@
     movieTitleEl.textContent = currentMovie.title || "Untitled";
     updateQualityPicker(currentMovie);
     if (speedPicker) speedPicker.hidden = false;
+    if (realtimePicker) realtimePicker.hidden = false;
 
     if (video.getAttribute("data-movie-url") !== url) {
       setSpeedUI(1);
@@ -223,6 +251,7 @@
         if (wp) wp.send(msg);
       });
     }
+    if (sync.setRealtime) sync.setRealtime(realtimeOn);
     if (!reactions) {
       reactions = WatchPartyReactions.create({
         barEl: document.getElementById("emoji-bar"),
@@ -276,6 +305,7 @@
     setPartyStatus("");
     if (qualityPicker) qualityPicker.hidden = true;
     if (speedPicker) speedPicker.hidden = true;
+    if (realtimePicker) realtimePicker.hidden = true;
     currentQuality = "";
     currentPlaybackRate = 1;
     if (speedSelect) speedSelect.value = "1";
@@ -460,6 +490,10 @@
       });
       showWaiting(true);
     }
+  });
+
+  wp.on("realtime", function (msg) {
+    setRealtime(msg && msg.on !== false);
   });
 
   function applyPlayback(msg) {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Theater — Watch Party</title>
-    <link rel="stylesheet" href="css/styles.css?v=22" />
+    <link rel="stylesheet" href="css/styles.css?v=23" />
   </head>
   <body class="theater-page">
     <div class="page">
@@ -43,6 +43,10 @@
               <label class="quality-picker" id="quality-picker" hidden>
                 <span class="quality-picker-label">Quality</span>
                 <select id="quality-select" aria-label="Video quality"></select>
+              </label>
+              <label class="quality-picker realtime-picker" id="realtime-picker" hidden>
+                <input type="checkbox" id="realtime-toggle" checked />
+                <span class="quality-picker-label">Real-time</span>
               </label>
               <label class="quality-picker" id="speed-picker" hidden>
                 <span class="quality-picker-label">Speed</span>
@@ -165,13 +169,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js?v=15"></script>
-    <script src="js/peer.js?v=20"></script>
+    <script src="js/peer.js?v=21"></script>
     <script src="js/qualities.js?v=1"></script>
-    <script src="js/sync.js?v=16"></script>
+    <script src="js/sync.js?v=17"></script>
     <script src="js/chat.js?v=17"></script>
     <script src="js/reactions.js?v=16"></script>
     <script src="js/fullscreen.js?v=7"></script>
     <script src="js/shortcuts.js?v=4"></script>
-    <script src="js/theater.js?v=21"></script>
+    <script src="js/theater.js?v=22"></script>
   </body>
 </html>

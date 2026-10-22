@@ -40,6 +40,9 @@
         },
         "pickingMovie": {
           ".validate": "newData.isBoolean()"
+        },
+        "realtimeSync": {
+          ".validate": "newData.isBoolean()"
         }
       }
     }

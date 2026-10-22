@@ -201,6 +201,17 @@
       api._unsubs.push(function () {
         pickingRef.off("value", pickingHandler);
       });
+
+      const realtimeRef = roomRef.child("realtimeSync");
+      const realtimeHandler = realtimeRef.on("value", function (snap) {
+        const val = snap.val();
+        emit("realtime", {
+          on: val === null || val === undefined ? true : !!val,
+        });
+      });
+      api._unsubs.push(function () {
+        realtimeRef.off("value", realtimeHandler);
+      });
     }
 
     function clearSameRolePresence() {
@@ -382,6 +393,12 @@
 
         if (msg.type === "picking") {
           api._roomRef.child("pickingMovie").set(!!msg.active);
+          return true;
+        }
+
+        if (msg.type === "realtime") {
+          if (api.role !== "host") return false;
+          api._roomRef.child("realtimeSync").set(!!msg.on);
           return true;
         }
 

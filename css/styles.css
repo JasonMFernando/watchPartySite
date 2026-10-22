@@ -750,6 +750,18 @@ body.player-fs-lock {
   font-weight: 500;
 }
 
+.realtime-picker input {
+  accent-color: var(--accent);
+  width: 0.95rem;
+  height: 0.95rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.realtime-picker input:disabled {
+  cursor: default;
+}
+
 .quality-picker select {
   appearance: none;
   background: var(--bg-panel);

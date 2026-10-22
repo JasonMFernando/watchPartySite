@@ -8,6 +8,7 @@
   function createSync(video, sendFn) {
     let suppress = false;
     let seekingFromRemote = false;
+    let realtime = true;
 
     function withSuppress(fn) {
       suppress = true;
@@ -79,16 +80,20 @@
     video.addEventListener("seeked", onLocalSeeked);
     video.addEventListener("ratechange", onLocalRate);
 
+    function snapTo(time, threshold) {
+      if (typeof time !== "number" || !isFinite(time)) return;
+      if (Math.abs(video.currentTime - time) <= threshold) return;
+      seekingFromRemote = true;
+      video.currentTime = time;
+    }
+
     function applyRemote(msg) {
       if (!msg || !msg.type) return;
 
       if (msg.type === "play") {
         withSuppress(function () {
           if (typeof msg.rate === "number") applyRate(msg.rate);
-          if (Math.abs(video.currentTime - msg.currentTime) > DRIFT_THRESHOLD) {
-            seekingFromRemote = true;
-            video.currentTime = msg.currentTime;
-          }
+          if (realtime) snapTo(msg.currentTime, DRIFT_THRESHOLD);
           const p = video.play();
           if (p && typeof p.catch === "function") p.catch(function () {});
         });
@@ -98,10 +103,7 @@
       if (msg.type === "pause") {
         withSuppress(function () {
           if (typeof msg.rate === "number") applyRate(msg.rate);
-          if (Math.abs(video.currentTime - msg.currentTime) > DRIFT_THRESHOLD) {
-            seekingFromRemote = true;
-            video.currentTime = msg.currentTime;
-          }
+          if (realtime) snapTo(msg.currentTime, DRIFT_THRESHOLD);
           video.pause();
         });
         return;
@@ -110,10 +112,7 @@
       if (msg.type === "seek") {
         withSuppress(function () {
           if (typeof msg.rate === "number") applyRate(msg.rate);
-          if (Math.abs(video.currentTime - msg.currentTime) > SEEK_THRESHOLD) {
-            seekingFromRemote = true;
-            video.currentTime = msg.currentTime;
-          }
+          snapTo(msg.currentTime, SEEK_THRESHOLD);
         });
         return;
       }
@@ -121,19 +120,19 @@
       if (msg.type === "rate") {
         withSuppress(function () {
           applyRate(msg.rate);
-          if (
-            typeof msg.currentTime === "number" &&
-            Math.abs(video.currentTime - msg.currentTime) > DRIFT_THRESHOLD
-          ) {
-            seekingFromRemote = true;
-            video.currentTime = msg.currentTime;
-          }
+          if (realtime) snapTo(msg.currentTime, DRIFT_THRESHOLD);
         });
       }
     }
 
     return {
       applyRemote: applyRemote,
+      setRealtime: function (on) {
+        realtime = on !== false;
+      },
+      isRealtime: function () {
+        return realtime;
+      },
       setRate: function (rate) {
         applyRate(rate);
       },
